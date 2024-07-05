@@ -39,4 +39,3 @@ CREATE TABLE Comments (
                           user_id VARCHAR,
                           content TEXT
 ) ;
-

@@ -64,7 +64,7 @@ func (c *Community) DeleteCommunity(req *pb.DeleteCommunityRequest) (*pb.DeleteC
 }
 
 func (c *Community) GetAllCommunities(req *pb.GetCommunitiesRequest) (*pb.GetCommunitiesResponse, error) {
-	query := `SELECT * FROM community where len(description) > 40`
+	query := `SELECT  id, name, description, location FROM communities where len(description) > 40`
 	rows, err := c.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (c *Community) GetAllCommunities(req *pb.GetCommunitiesRequest) (*pb.GetCom
 	var comms []*pb.Community
 	for rows.Next() {
 		comm := &pb.Community{}
-		err = rows.Scan(&comm.Name, &comm.Description, &comm.Location)
+		err = rows.Scan(&comm.CommunityID, &comm.Name, &comm.Description, &comm.Location)
 		if err != nil {
 			return nil, err
 		}
@@ -116,12 +116,12 @@ func (c *Community) CreateEvent(req *pb.JoinEventRequest) (*pb.JoinEventResponse
 }
 
 func (c *Community) GetEvent(req *pb.GetEventsRequest) (*pb.GetEventsResponse, error) {
-	query := `SELECT * FROM events WHERE event_id = $1`
+	query := `SELECT id, community_id, name, description, type, location FROM events WHERE event_id = $1`
 	row := c.DB.QueryRow(query, req.EventID)
 
 	event := &pb.GetEventsResponse{}
 
-	err := row.Scan(&event.Event)
+	err := row.Scan(&event.Event.EventID, &event.Event.CommunityID, &event.Event.Name, &event.Event.Description, &event.Event.Type, &event.Event.Location)
 	if err != nil {
 		return nil, err
 	}
@@ -140,12 +140,12 @@ func (c *Community) CreateForum(req *pb.JoinForumRequest) (*pb.JoinForumResponse
 }
 
 func (c *Community) GetForumBYID(req *pb.GetForumRequest) (*pb.GetForumResponse, error) {
-	query := `select * from forums where forum_id = $1`
+	query := `select id, community_id,,user_id, title, content from forums where forum_id = $1`
 	row := c.DB.QueryRow(query, req.ForumID)
 
 	var forum *pb.GetForumResponse
 
-	err := row.Scan(&forum.Forum.Id, &forum.Forum.CommunityID, &forum.Forum.Title, &forum.Forum.Content)
+	err := row.Scan(&forum.Forum.Id, &forum.Forum.CommunityID, &forum.Forum.UserID, &forum.Forum.Title, &forum.Forum.Content)
 	if err != nil {
 		return nil, nil
 	}
@@ -162,12 +162,12 @@ func (c *Community) CreateComment(req *pb.AddCommentRequest) (*pb.AddCommentResp
 }
 
 func (c *Community) GetCommentByUserID(req *pb.GetForumCommentRequest) (*pb.GetForumCommentResponse, error) {
-	query := `select * from comments where user_id = $1`
+	query := `select forum_id, user_id, content from comments where user_id = $1`
 	row := c.DB.QueryRow(query, req.UserID)
 
 	var com *pb.GetForumCommentResponse
 
-	err := row.Scan(&com.Comment.ForumID, &com.Comment.Content)
+	err := row.Scan(&com.Comment.ForumID, &com.Comment.UserID, &com.Comment.Content)
 	if err != nil {
 		return nil, err
 	}
